@@ -1,0 +1,16 @@
+spring:
+  application:
+    name: agenda-clinica
+
+  # O banco precisa existir antes da subida; o docker-compose ja cria o AgendaDB.
+  datasource:
+    url: ${DB_URL:jdbc:sqlserver://localhost:1433;databaseName=AgendaDB;encrypt=true;trustServerCertificate=true}
+    username: ${DB_USER:sa}
+    password: ${DB_PASSWORD:}
+
+  flyway:
+    enabled: true
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html

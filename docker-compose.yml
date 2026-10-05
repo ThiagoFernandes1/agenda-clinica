@@ -1,0 +1,43 @@
+# Sobe o SQL Server e cria o banco AgendaDB. Tabelas, procedures e funcoes
+# ficam por conta do Flyway, na primeira vez que a API subir.
+#
+#   docker compose up -d
+#   DB_PASSWORD=Agenda@2026 mvn spring-boot:run
+
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: ${DB_PASSWORD:-Agenda@2026}
+    ports:
+      - "1433:1433"
+    volumes:
+      - dados:/var/opt/mssql
+    healthcheck:
+      test: /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P "$$MSSQL_SA_PASSWORD" -Q "SELECT 1" -b -o /dev/null
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  cria-banco:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    entrypoint:
+      - /opt/mssql-tools18/bin/sqlcmd
+      - -C
+      - -S
+      - sqlserver
+      - -U
+      - sa
+      - -P
+      - ${DB_PASSWORD:-Agenda@2026}
+      - -b
+      - -Q
+      - IF DB_ID(N'AgendaDB') IS NULL CREATE DATABASE AgendaDB
+    restart: "no"
+
+volumes:
+  dados:
