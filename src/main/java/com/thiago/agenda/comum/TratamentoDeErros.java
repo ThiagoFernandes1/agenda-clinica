@@ -23,6 +23,16 @@ public class TratamentoDeErros {
         return problema(HttpStatus.CONFLICT, "Conflito", e.getMessage());
     }
 
+    @ExceptionHandler(RegraDoBancoException.class)
+    public ProblemDetail regraDoBanco(RegraDoBancoException e) {
+        String titulo = switch (e.getStatus()) {
+            case NOT_FOUND -> "Nao encontrado";
+            case CONFLICT -> "Conflito de horario";
+            default -> "Operacao nao permitida";
+        };
+        return problema(e.getStatus(), titulo, e.getMessage());
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ProblemDetail validacao(MethodArgumentNotValidException e) {
         Map<String, String> campos = new LinkedHashMap<>();
