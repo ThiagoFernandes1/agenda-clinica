@@ -1,0 +1,59 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    name: Build e testes no SQL Server
+    runs-on: ubuntu-latest
+
+    services:
+      sqlserver:
+        image: mcr.microsoft.com/mssql/server:2022-latest
+        env:
+          ACCEPT_EULA: "Y"
+          MSSQL_SA_PASSWORD: Agenda@2026
+        ports:
+          - 1433:1433
+        options: >-
+          --health-cmd "/opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P Agenda@2026 -Q 'SELECT 1' -b -o /dev/null"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configura JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: temurin
+          cache: maven
+
+      - name: Cria o banco
+        run: >-
+          docker exec ${{ job.services.sqlserver.id }}
+          /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P Agenda@2026 -b
+          -Q "CREATE DATABASE AgendaDB"
+
+      # Com DB_URL definida, o AgendamentoSqlServerTest tambem roda: aplica as
+      # migrations e exercita procedures, funcao e concorrencia no banco real.
+      - name: Build e testes
+        run: mvn -B verify
+        env:
+          DB_URL: jdbc:sqlserver://localhost:1433;databaseName=AgendaDB;encrypt=true;trustServerCertificate=true
+          DB_USER: sa
+          DB_PASSWORD: Agenda@2026
+
+      - name: Publica relatorio de testes
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: surefire-reports
+          path: target/surefire-reports/
