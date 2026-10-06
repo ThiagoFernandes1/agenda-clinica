@@ -111,6 +111,8 @@ No PowerShell, troque a segunda linha por:
 $env:DB_PASSWORD = "Agenda@2026"; mvn spring-boot:run
 ```
 
+Se a porta 1433 já estiver ocupada por outro SQL Server, suba com `DB_PORT=1434 docker compose up -d` e aponte `DB_URL` para `localhost:1434`.
+
 Os dados de exemplo trazem três médicos (clínica geral, cardiologia e dermatologia), com expedientes diferentes, e três pacientes.
 
 ---

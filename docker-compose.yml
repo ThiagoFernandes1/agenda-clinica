@@ -3,6 +3,10 @@
 #
 #   docker compose up -d
 #   DB_PASSWORD=Agenda@2026 mvn spring-boot:run
+#
+# Se a porta 1433 ja estiver em uso (outro SQL Server local), escolha outra:
+#   DB_PORT=1434 docker compose up -d
+#   DB_URL="jdbc:sqlserver://localhost:1434;databaseName=AgendaDB;encrypt=true;trustServerCertificate=true" ...
 
 services:
   sqlserver:
@@ -11,7 +15,7 @@ services:
       ACCEPT_EULA: "Y"
       MSSQL_SA_PASSWORD: ${DB_PASSWORD:-Agenda@2026}
     ports:
-      - "1433:1433"
+      - "${DB_PORT:-1433}:1433"
     volumes:
       - dados:/var/opt/mssql
     healthcheck:
