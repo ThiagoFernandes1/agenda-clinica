@@ -202,6 +202,28 @@ class AgendamentoSqlServerTest {
         }
     }
 
+    @Test
+    void buscaDePacienteTrataCuringasComoTexto() throws Exception {
+        String marca = "Z" + ThreadLocalRandom.current().nextInt(1_000_000);
+        criar("/api/pacientes", """
+                {"nome":"%s 50%% desconto","cpf":"%s"}""".formatted(marca, cpfAleatorio()));
+        criar("/api/pacientes", """
+                {"nome":"%s 500 reais","cpf":"%s"}""".formatted(marca, cpfAleatorio()));
+        criar("/api/pacientes", """
+                {"nome":"%s a_b","cpf":"%s"}""".formatted(marca, cpfAleatorio()));
+        criar("/api/pacientes", """
+                {"nome":"%s aXb","cpf":"%s"}""".formatted(marca, cpfAleatorio()));
+
+        mvc.perform(get("/api/pacientes").param("nome", marca + " 50%"))
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].nome").value(marca + " 50% desconto"));
+        mvc.perform(get("/api/pacientes").param("nome", marca + " a_b"))
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].nome").value(marca + " a_b"));
+        mvc.perform(get("/api/pacientes").param("nome", marca))
+                .andExpect(jsonPath("$.length()").value(4));
+    }
+
     /* ------------------------------------------------------------------ */
 
     private ResultActions agendar(int medicoId, int pacienteId, String hora) throws Exception {

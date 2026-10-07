@@ -21,12 +21,20 @@ public class PacienteRepository {
         return jdbc.sql("""
                         SELECT TOP (100) id, nome, cpf, email, telefone
                         FROM   dbo.paciente
-                        WHERE  :nome IS NULL OR nome LIKE '%' + :nome + '%'
+                        WHERE  :nome IS NULL OR nome LIKE '%' + :nome + '%' ESCAPE '\\'
                         ORDER BY nome
                         """)
-                .param("nome", nome)
+                .param("nome", nome == null ? null : escaparLike(nome))
                 .query(Paciente.class)
                 .list();
+    }
+
+    /** %, _ e [ sao curingas no LIKE do SQL Server; aqui valem como texto. */
+    static String escaparLike(String termo) {
+        return termo.replace("\\", "\\\\")
+                    .replace("%", "\\%")
+                    .replace("_", "\\_")
+                    .replace("[", "\\[");
     }
 
     public Optional<Paciente> buscarPorId(int id) {
